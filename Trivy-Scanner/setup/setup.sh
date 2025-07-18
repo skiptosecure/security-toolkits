@@ -1,4 +1,8 @@
-#!/bin/bash
+# Set up firewall (open port 5001)
+print_status "Configuring firewall..."
+sudo firewall-cmd --permanent --add-port=5001/tcp
+sudo firewall-cmd --reload
+print_success "Firewall configured - port 5001 open"#!/bin/bash
 
 # Trivy Security Dashboard - Rocky 9 Setup Script
 # By Skip To Secure
@@ -90,39 +94,33 @@ source venv/bin/activate
 print_status "Upgrading pip..."
 pip install --upgrade pip
 
-# Create requirements.txt
-print_status "Creating requirements.txt..."
-cat > requirements.txt << 'EOF'
-Flask==3.0.0
-Werkzeug==3.0.1
-click>=8.0
-importlib-metadata>=6.0
-itsdangerous>=2.1.2
-Jinja2>=3.1.2
-MarkupSafe>=2.1.1
-EOF
+# Download application files
+print_status "Downloading application files from GitHub..."
+curl -sSL https://raw.githubusercontent.com/skiptosecure/security-toolkits/main/Trivy-Scanner/app.py -o app.py
+curl -sSL https://raw.githubusercontent.com/skiptosecure/security-toolkits/main/Trivy-Scanner/models.py -o models.py
+curl -sSL https://raw.githubusercontent.com/skiptosecure/security-toolkits/main/Trivy-Scanner/scanner.py -o scanner.py
+curl -sSL https://raw.githubusercontent.com/skiptosecure/security-toolkits/main/Trivy-Scanner/requirements.txt -o requirements.txt
+
+# Create static directory and download HTML
+print_status "Creating static directory and downloading dashboard..."
+mkdir -p static
+curl -sSL https://raw.githubusercontent.com/skiptosecure/security-toolkits/main/Trivy-Scanner/dashboard.html -o static/dashboard.html
+
+# Create setup directory and download database script
+print_status "Setting up database components..."
+mkdir -p setup
+curl -sSL https://raw.githubusercontent.com/skiptosecure/security-toolkits/main/Trivy-Scanner/setup/create_database.py -o setup/create_database.py
+
+print_success "Application files downloaded successfully"
 
 # Install Python dependencies
 print_status "Installing Python dependencies..."
 pip install -r requirements.txt
 
-# Create static directory
-mkdir -p static
-
-# Set up firewall (open port 5001)
-print_status "Configuring firewall..."
-sudo firewall-cmd --permanent --add-port=5001/tcp
-sudo firewall-cmd --reload
-print_success "Firewall configured - port 5001 open"
-
 # Create database
-print_status "Setting up database..."
-if [ -f "create_database.py" ]; then
-    python create_database.py
-    print_success "Database created successfully"
-else
-    print_warning "create_database.py not found - you'll need to create it manually"
-fi
+print_status "Creating database..."
+python setup/create_database.py
+print_success "Database created successfully"
 
 # Create systemd service (optional)
 print_status "Creating systemd service..."
@@ -168,13 +166,7 @@ echo "To start as a service:"
 echo "   sudo systemctl enable trivy-dashboard"
 echo "   sudo systemctl start trivy-dashboard"
 echo ""
-echo "Required files to add:"
-echo "   - app.py"
-echo "   - models.py" 
-echo "   - scanner.py"
-echo "   - create_database.py"
-echo "   - static/dashboard.html"
-echo ""
+echo "Database and all files are ready!"
 echo "Test with: curl http://localhost:5001"
 echo ""
-print_success "Ready for deployment!"
+print_success "Ready to use! Everything is set up automatically."
