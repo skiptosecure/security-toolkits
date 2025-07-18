@@ -11,7 +11,6 @@ echo "=============================="
 echo "Setting up on Rocky Linux 9..."
 echo ""
 
-
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
